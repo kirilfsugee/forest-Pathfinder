@@ -101,6 +101,8 @@ class MainApp(App):
         y = y_max - int(y)
         if x_min < x < x_max and y_min < y < y_max:
             print("coords x="+str(x)+ ' y='+str(y) )
+            list_point.append((x,y))
+
 
 
 if __name__ == '__main__':
