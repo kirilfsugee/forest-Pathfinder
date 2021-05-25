@@ -5,6 +5,10 @@ from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 
+from kivy.config import Config
+Config.set('graphics', 'width', '1400')
+Config.set('graphics', 'height', '800')
+Config.write()
 
 
 class MainApp(App):
@@ -12,15 +16,27 @@ class MainApp(App):
         #создаем основную раскладку
         layout_main = BoxLayout(padding=3)  # Отступ padding между лейаутом
 
+
         #добавлялем изображение
         img = Image(source='../map_forest.png',
                     size_hint=(1, 1),
                     pos_hint={'center_x': .5, 'center_y': .5})
         layout_main.add_widget(img)
 
-        #создаем правую раскладку
-        layout_right = BoxLayout(padding=3, orientation="vertical" )
 
+
+
+        layout_midle = GridLayout(cols=1, rows=40, padding=3,  size_hint=( None, None),
+                                size= (150, 800))
+        for i in range(40):
+            layout_midle.add_widget(Label(text='point '+str(i)))
+
+        layout_main.add_widget(layout_midle)
+
+
+        #создаем правую раскладку
+        layout_right = BoxLayout(padding=3, orientation="vertical", size_hint=( None, None),
+                                size= (150, 800))
         btn_add_point = Button(text="Add point",size_hint=(1, 1), size=(150, 50),
                      background_color=[0,1,0,1]
                      )
