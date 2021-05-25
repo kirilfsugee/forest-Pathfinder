@@ -4,11 +4,17 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
-
 from kivy.config import Config
+
+# задаем размер окна приложения
 Config.set('graphics', 'width', '1400')
 Config.set('graphics', 'height', '800')
+# отключам мульт тач, чтоб работала правая кнопка мыши
+Config.set('input', 'mouse', 'mouse,disable_multitouch')
 Config.write()
+
+# списко точек
+list_point=[]
 
 
 class MainApp(App):
@@ -21,15 +27,17 @@ class MainApp(App):
         img = Image(source='../map_forest.png',
                     size_hint=(1, 1),
                     pos_hint={'center_x': .5, 'center_y': .5})
+        img.bind(on_touch_up = self.on_touch_up)
         layout_main.add_widget(img)
 
 
 
-
-        layout_midle = GridLayout(cols=1, rows=40, padding=3,  size_hint=( None, None),
+        #создаем среднюю раскладку для отображения точек
+        count_points = len(list_point)
+        layout_midle = GridLayout(cols=1, rows=count_points, padding=3,  size_hint=( None, None),
                                 size= (150, 800))
-        for i in range(40):
-            layout_midle.add_widget(Label(text='point '+str(i)))
+        for i in range(count_points):
+            layout_midle.add_widget(Label(text='point '+str(list_point[i])))
 
         layout_main.add_widget(layout_midle)
 
@@ -38,8 +46,7 @@ class MainApp(App):
         layout_right = BoxLayout(padding=3, orientation="vertical", size_hint=( None, None),
                                 size= (150, 800))
         btn_add_point = Button(text="Add point",size_hint=(1, 1), size=(150, 50),
-                     background_color=[0,1,0,1]
-                     )
+                     background_color=[0,1,0,1])
         btn_add_point.bind(on_press=self.add_point)
         layout_right.add_widget(btn_add_point)
 
@@ -83,11 +90,17 @@ class MainApp(App):
         # функция экспорта кортежей
         print('Вы нажали на кнопку delete')
 
-        # label = Label(text='Hello from Kivy',
-        #               size_hint=(.5, .5),
-        #               pos_hint={'center_x': .5, 'center_y': .5})
-        #
-        # return label
+    # обработчик нажатия кнопки мыши
+    def on_touch_up(self, touch,p):
+        x_min = 130
+        x_max = 940
+        y_min = 9
+        y_max = 800
+        x,y = p.pos
+        x = int(x)
+        y = y_max - int(y)
+        if x_min < x < x_max and y_min < y < y_max:
+            print("coords x="+str(x)+ ' y='+str(y) )
 
 
 if __name__ == '__main__':
