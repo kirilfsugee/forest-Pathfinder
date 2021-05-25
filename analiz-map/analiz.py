@@ -25,15 +25,19 @@ class MainApp(App):
                      background_color=[0,1,0,1]
                      )
         btn_add_point.bind(on_press=self.add_point)
-
         layout_right.add_widget(btn_add_point)
 
         btn_add_connection = Button(text="Add connection",size_hint=(1, 1), size=(150, 50),
                      background_color=[0,1,0,1]
                      )
         btn_add_connection.bind(on_press=self.add_connection)
-
         layout_right.add_widget(btn_add_connection)
+
+        btn_delete = Button(text="Delete",size_hint=(1, 1), size=(150, 50),
+                     background_color=[0,1,0,1]
+                     )
+        btn_delete.bind(on_press=self.delete)
+        layout_right.add_widget(btn_delete)
 
 
         btn_export = Button(text="Export",size_hint=(1, None), size=(150, 50),
@@ -58,6 +62,10 @@ class MainApp(App):
     def add_connection(self, instance):
         # функция экспорта кортежей
         print('Вы нажали на кнопку add_connection')
+
+    def delete(self, instance):
+        # функция экспорта кортежей
+        print('Вы нажали на кнопку delete')
 
         # label = Label(text='Hello from Kivy',
         #               size_hint=(.5, .5),
