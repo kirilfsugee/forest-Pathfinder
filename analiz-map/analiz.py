@@ -17,9 +17,19 @@ Config.set('input', 'mouse', 'mouse,disable_multitouch')
 Config.write()
 
 # списко точек
-list_point=[(1,1)]
+list_point=[(470,249)]
+list_connection=[]
 # максимальное количество перекрестков
 max_count_points = 60
+# статус режима вывода отладочной информации
+debug = True
+# поля отображения поля
+x_min = 5
+x_max = 1050
+y_min = 0
+y_max = 995
+# режим нажатия кнопки мыши
+mouse_rejim = 0    # 0 ничего,  10 режим добавляения точки,  20 режим соединения
 
 class MainApp(App):
     def build(self):
@@ -36,6 +46,13 @@ class MainApp(App):
         img.bind(on_touch_up = self.on_touch_up)
         self.layout_main.add_widget(img)
 
+
+        # отображаем точки из списка
+        for x,y in list_point:
+            with self.layout_main.canvas:
+                Color(1, 0, 1, 1)
+                self.rect = Rectangle(pos=(x_min + x - 5, y_max - y - 5),
+                                      size=(10, 10))
 
 
         #создаем среднюю раскладку для отображения точек
@@ -92,40 +109,43 @@ class MainApp(App):
 
     def export_file(self, instance):
         # функция экспорта кортежей
-        print('Вы нажали на кнопку export')
+        if debug: print('Вы нажали на кнопку export')
 
     def add_point(self, instance):
+        global mouse_rejim
         # функция экспорта кортежей
-        print('Вы нажали на кнопку add_point')
+        if debug: print('Вы нажали на кнопку add_point')
+        if mouse_rejim == 0: mouse_rejim = 10
 
     def add_connection(self, instance):
         # функция экспорта кортежей
-        print('Вы нажали на кнопку add_connection')
+        if debug: print('Вы нажали на кнопку add_connection')
 
     def delete(self, instance):
         # функция экспорта кортежей
-        print('Вы нажали на кнопку delete')
+        if debug: print('Вы нажали на кнопку delete')
 
     # обработчик нажатия кнопки мыши
     def on_touch_up(self, touch,p):
-        x_min = 5
-        x_max = 1050
-        y_min = 0
-        y_max = 995
+        global mouse_rejim
         x,y = p.pos
         x = int(x) - x_min
         y = y_max - int(y)
-        if 0 < x < x_max and y_min < y < y_max and max_count_points > len(list_point):
-            print("coords x="+str(x)+ ' y='+str(y) )
-            list_point.append((x,y))
+        if 0 < x < x_max and y_min < y < y_max and max_count_points > len(list_point) and mouse_rejim!=0:
 
-            lb = Label(text='point ('+str(x)+','+str(y)+')')
-            self.layout_midle.add_widget(lb)
+            if debug: print("coords x="+str(x)+ ' y='+str(y) )
 
-            with self.layout_main.canvas:
-                Color(1, 0, 1, 1)  #
-                self.rect = Rectangle(pos=(x_min+x-5,y_max-y-5),
-                                      size=(10,10))
+            if mouse_rejim == 10:
+                list_point.append((x,y))
+
+                lb = Label(text='point ('+str(x)+','+str(y)+')')
+                self.layout_midle.add_widget(lb)
+
+                with self.layout_main.canvas:
+                    Color(1, 0, 1, 1)  #
+                    self.rect = Rectangle(pos=(x_min+x-5,y_max-y-5),
+                                          size=(10,10))
+                mouse_rejim = 0
 
 
 
