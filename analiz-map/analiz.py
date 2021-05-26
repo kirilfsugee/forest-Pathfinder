@@ -224,6 +224,8 @@ class MainApp(App):
                     x1, y1 = list_point[a]
                     x2, y2 = list_point[b]
                     print(abs((x - x1) * (y2 - y1) - (x2 - x1) * (y - y1)))
+                    if (x - x1) / (x2 - x1) == (y - y1) / (y2 - y1):
+                        print("yes")
                     if abs((x - x1) * (y2 - y1) - (x2 - x1) * (y - y1)) < 5:
                         list_connection.pop(i)
                         self.update(self)
