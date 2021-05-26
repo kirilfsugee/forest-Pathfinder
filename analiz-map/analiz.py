@@ -4,6 +4,8 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
+from kivy.graphics import Rectangle, Color
+
 from kivy.config import Config
 
 # задаем размер окна приложения
@@ -15,13 +17,14 @@ Config.set('input', 'mouse', 'mouse,disable_multitouch')
 Config.write()
 
 # списко точек
-list_point=[]
-
+list_point=[(1,1)]
+# максимальное количество перекрестков
+max_count_points = 60
 
 class MainApp(App):
     def build(self):
         #создаем основную раскладку
-        layout_main = BoxLayout(padding=3)  # Отступ padding между лейаутом
+        self.layout_main = BoxLayout(padding=3)  # Отступ padding между лейаутом
 
 
         #добавлялем изображение
@@ -31,53 +34,60 @@ class MainApp(App):
                     #pos=(100, 110)
                     )
         img.bind(on_touch_up = self.on_touch_up)
-        layout_main.add_widget(img)
+        self.layout_main.add_widget(img)
 
 
 
         #создаем среднюю раскладку для отображения точек
         count_points = len(list_point)
-        layout_midle = GridLayout(cols=1,
-                                  rows=count_points,
+        self.layout_midle = GridLayout(cols=1,
+                                  rows=max_count_points,
                                   padding=3,
                                   size_hint=( None, None),
-                                  size= (190, 800))
+                                  size= (190, 1000))
         for i in range(count_points):
-            layout_midle.add_widget(Label(text='point '+str(list_point[i])))
+            self.layout_midle.add_widget(Label(text='point '+str(list_point[i])))
 
-        layout_main.add_widget(layout_midle)
+        self.layout_main.add_widget(self.layout_midle)
 
 
         #создаем правую раскладку
-        layout_right = BoxLayout(padding=3, orientation="vertical", size_hint=( None, None),
-                                size= (150, 800))
-        btn_add_point = Button(text="Add point",size_hint=(1, 1), size=(150, 50),
-                     background_color=[0,1,0,1]) #rgba
+        layout_right = BoxLayout(padding=3,
+                                 orientation="vertical",
+                                 size_hint=( None, None),
+                                 size= (150, 1000))
+        btn_add_point = Button(text="Add point",
+                               size_hint=(1, 1),
+                               size=(150, 50),
+                               background_color=[0,1,0,1]) #rgba
         btn_add_point.bind(on_press=self.add_point)
         layout_right.add_widget(btn_add_point)
 
-        btn_add_connection = Button(text="Add connection",size_hint=(1, 1), size=(150, 50),
-                     background_color=[0,1,0,1]
-                     )
+        btn_add_connection = Button(text="Add connection",
+                                    size_hint=(1, 1),
+                                    size=(150, 50),
+                                    background_color=[0,1,0,1])
         btn_add_connection.bind(on_press=self.add_connection)
         layout_right.add_widget(btn_add_connection)
 
-        btn_delete = Button(text="Delete",size_hint=(1, 1), size=(150, 50),
-                     background_color=[0,1,0,1]
-                     )
+        btn_delete = Button(text="Delete",
+                            size_hint=(1, 1),
+                            size=(150, 50),
+                            background_color=[0,1,0,1])
         btn_delete.bind(on_press=self.delete)
         layout_right.add_widget(btn_delete)
 
 
-        btn_export = Button(text="Export",size_hint=(1, None), size=(150, 50),
-                     background_color=[0,1,0,1]
-                     )
+        btn_export = Button(text="Export",
+                            size_hint=(1, None),
+                            size=(150, 50),
+                            background_color=[0,1,0,1])
         btn_export.bind(on_press=self.export_file)
         layout_right.add_widget(btn_export)
 
 
-        layout_main.add_widget(layout_right)
-        return layout_main
+        self.layout_main.add_widget(layout_right)
+        return self.layout_main
 
 
     def export_file(self, instance):
@@ -101,13 +111,21 @@ class MainApp(App):
         x_min = 5
         x_max = 1050
         y_min = 0
-        y_max = 996
+        y_max = 995
         x,y = p.pos
         x = int(x) - x_min
         y = y_max - int(y)
-        if 0 < x < x_max and 0 < y < y_max:
+        if 0 < x < x_max and y_min < y < y_max and max_count_points > len(list_point):
             print("coords x="+str(x)+ ' y='+str(y) )
             list_point.append((x,y))
+
+            lb = Label(text='point ('+str(x)+','+str(y)+')')
+            self.layout_midle.add_widget(lb)
+
+            with self.layout_main.canvas:
+                Color(1, 0, 1, 1)  #
+                self.rect = Rectangle(pos=(x_min+x-5,y_max-y-5),
+                                      size=(10,10))
 
 
 
