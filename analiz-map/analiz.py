@@ -5,7 +5,7 @@ from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Rectangle, Color, Line
-from kivy.clock import Clock
+#from kivy.clock import Clock
 
 from kivy.config import Config
 
