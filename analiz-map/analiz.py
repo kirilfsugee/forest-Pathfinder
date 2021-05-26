@@ -8,7 +8,8 @@ from kivy.config import Config
 
 # задаем размер окна приложения
 Config.set('graphics', 'width', '1400')
-Config.set('graphics', 'height', '800')
+Config.set('graphics', 'height', '1000')
+Config.set('graphics', 'resizable', '0')
 # отключам мульт тач, чтоб работала правая кнопка мыши
 Config.set('input', 'mouse', 'mouse,disable_multitouch')
 Config.write()
@@ -25,8 +26,10 @@ class MainApp(App):
 
         #добавлялем изображение
         img = Image(source='../map_forest.png',
-                    size_hint=(1, 1),
-                    pos_hint={'center_x': .5, 'center_y': .5})
+                    #size_hint=(1, 1),
+                    #pos_hint={'center_x': .5, 'center_y': .5},
+                    #pos=(100, 110)
+                    )
         img.bind(on_touch_up = self.on_touch_up)
         layout_main.add_widget(img)
 
@@ -34,8 +37,11 @@ class MainApp(App):
 
         #создаем среднюю раскладку для отображения точек
         count_points = len(list_point)
-        layout_midle = GridLayout(cols=1, rows=count_points, padding=3,  size_hint=( None, None),
-                                size= (150, 800))
+        layout_midle = GridLayout(cols=1,
+                                  rows=count_points,
+                                  padding=3,
+                                  size_hint=( None, None),
+                                  size= (190, 800))
         for i in range(count_points):
             layout_midle.add_widget(Label(text='point '+str(list_point[i])))
 
@@ -46,7 +52,7 @@ class MainApp(App):
         layout_right = BoxLayout(padding=3, orientation="vertical", size_hint=( None, None),
                                 size= (150, 800))
         btn_add_point = Button(text="Add point",size_hint=(1, 1), size=(150, 50),
-                     background_color=[0,1,0,1])
+                     background_color=[0,1,0,1]) #rgba
         btn_add_point.bind(on_press=self.add_point)
         layout_right.add_widget(btn_add_point)
 
@@ -92,14 +98,14 @@ class MainApp(App):
 
     # обработчик нажатия кнопки мыши
     def on_touch_up(self, touch,p):
-        x_min = 130
-        x_max = 940
-        y_min = 9
-        y_max = 800
+        x_min = 5
+        x_max = 1050
+        y_min = 0
+        y_max = 996
         x,y = p.pos
-        x = int(x)
+        x = int(x) - x_min
         y = y_max - int(y)
-        if x_min < x < x_max and y_min < y < y_max:
+        if 0 < x < x_max and 0 < y < y_max:
             print("coords x="+str(x)+ ' y='+str(y) )
             list_point.append((x,y))
 
