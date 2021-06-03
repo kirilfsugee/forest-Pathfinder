@@ -21,6 +21,10 @@ Config.write()
 # списко точек
 list_point = [(362, 192), (409, 237)]
 list_connection = [(0, 1)]
+list_connection_multi_line = []
+list_multi_line = []
+
+
 # максимальное количество перекрестков
 max_count_points = 60
 # статус режима вывода отладочной информации
@@ -34,7 +38,8 @@ y_max = 764
 mouse_rejim = 0  # 0 ничего,  10 режим добавляения точки,  20 режим соединения,  30 удаления
 # запомненная точка в 20 режиме
 temp_i_20 = -1
-
+# временная мультлиния
+temp_multi_line =[]
 
 class MainApp(App):
     img = Image(source='../map_forest.png')
@@ -85,6 +90,14 @@ class MainApp(App):
         btn_add_connection.bind(on_press=self.add_connection)
         layout_right.add_widget(btn_add_connection)
 
+        btn_add_connection_multi_line = Button(text="Add multi con",
+                                    size_hint=(1, 1),
+                                    size=(150, 50),
+                                    background_color=[0, 1, 0, 1])
+        btn_add_connection_multi_line.bind(on_press=self.add_connection_maulti_line)
+        layout_right.add_widget(btn_add_connection_multi_line)
+
+
         btn_delete = Button(text="Delete",
                             size_hint=(1, 1),
                             size=(150, 50),
@@ -108,18 +121,26 @@ class MainApp(App):
 
     def add_point(self, instance):
         global mouse_rejim
-        # функция экспорта кортежей
+        # функция добавить точку
         if debug: print('Вы нажали на кнопку add_point')
         if mouse_rejim == 0:
             mouse_rejim = 10
 
     def add_connection(self, instance):
         global mouse_rejim
-        # функция экспорта кортежей
+        # функция добавить соединени
         if debug:
             print('Вы нажали на кнопку add_connection')
         if mouse_rejim == 0:
             mouse_rejim = 20
+
+    def add_connection_maulti_line(self, instance):
+        global mouse_rejim
+        # функция добавить мульти соединение
+        if debug:
+            print('Вы нажали на кнопку add_connection_multi_line')
+        if mouse_rejim == 0:
+            mouse_rejim = 40
 
     def delete(self, instance):
         global mouse_rejim
@@ -130,7 +151,7 @@ class MainApp(App):
 
     # обработчик нажатия кнопки мыши
     def on_touch_up(self, touch, p):
-        global mouse_rejim, temp_i_20, list_point
+        global mouse_rejim, temp_i_20, list_point, temp_multi_line
         dopusk = 5
         x, y = p.pos
         x = int(x) - x_min
@@ -196,7 +217,42 @@ class MainApp(App):
                         list_connection.pop(i)
                         self.update(self)
                 mouse_rejim = 0
+            elif mouse_rejim == 40:  # добавить мульт лаин    ожидаем первую точку
+                if debug:
+                    print('точка in ' + str(x) + ' y ' + str(y))
+                for i, (lx, ly) in enumerate(list_point):
+                    if debug:
+                        print('40 точка check ' + str(lx) + ' y ' + str(ly))
+                    if lx - dopusk < x < lx + dopusk and ly - dopusk < y < ly + dopusk:
+                        temp_i_20 = i
+                        mouse_rejim = 45
+                        if debug:
+                            print('точка ' + str(temp_i_20))
+                        break
+            elif mouse_rejim == 45:  # ожидаем рисование линий
+                # ищем есть ли рядом точка c x,y
+                if debug:
+                    print('45 точка in ' + str(x) + ' y ' + str(y))
 
+                for i, (lx, ly) in enumerate(list_point):  # если попали в точку конец мультлинии
+                    #if debug:
+                        #print('точка check ' + str(lx) + ' y ' + str(ly))
+                    if lx - dopusk < x < lx + dopusk and ly - dopusk < y < ly + dopusk:
+                        # добавляем наш список точек в лист
+                        list_multi_line.append(tuple(temp_multi_line))
+                        # очищаем текущий
+                        temp_multi_line = []
+                        # добавляем в список соединений мульти линии
+                        list_connection_multi_line.append((temp_i_20, i))
+                        mouse_rejim = 0
+                        if debug:
+                            print('добавлено мульти соединение между ' + str(temp_i_20) + ' и ' + str(i))
+                        self.update(self)
+                        break
+                    else:
+                        # добавляем очередную точку
+                        temp_multi_line.append((x,y))
+                        self.update(self)
 
     def update(self,p):
         self.layout_left.canvas.clear()
@@ -222,6 +278,42 @@ class MainApp(App):
                     Color(0, 0, 1, 1)  # rgba
                     Line(points=[x_min + x1, y_max - y1, x_min + x2, y_max - y2], width=2)
 
+        # отображаем временную мультилиний соединения из списка
+        x1,y1 = list_point[temp_i_20]
+        print(temp_multi_line)
+        for x,y in temp_multi_line:
+            with self.layout_left.canvas:
+                Color(0, 0, 1, 1)  # rgba
+                Line(points=[x_min + x1, y_max - y1, x_min + x, y_max - y], width=2)
+                x1,y1 =x,y
+
+        # отображаем мультилиний соединения из списка
+
+#        print(list_connection_multi_line)
+#        print(list_multi_line)
+        for point, multi in list(zip(list_connection_multi_line,list_multi_line)):
+            # получаем начальную и последнюю точку
+            a,b = point
+            xs, ys = list_point[a]
+            xe, ye = list_point[b]
+            l =list(multi)
+            xp, yp = l.pop(0)
+            # отрисовываем первую линию
+            with self.layout_left.canvas:
+                Color(0, 0, 1, 1)  # rgba
+                Line(points=[x_min + xs, y_max - ys, x_min + xp, y_max - yp], width=2)
+            while l:
+                x2, y2 = l.pop(0)
+                with self.layout_left.canvas:
+                    Color(0, 0, 1, 1)  # rgba
+                    Line(points=[x_min + xp, y_max - yp, x_min + x2, y_max - y2], width=2)
+                xp, yp =x2, y2
+            # отрисовываем последнюю
+            with self.layout_left.canvas:
+                Color(0, 0, 1, 1)  # rgba
+                Line(points=[x_min + xp, y_max - yp, x_min + xe, y_max - ye], width=2)
+
+
         # отображаем список точек
         self.layout_midle.clear_widgets()
         for x, y in list_point:
@@ -233,6 +325,8 @@ class MainApp(App):
         self.layout_midle2.clear_widgets()
         for a, b in list_connection:
             self.layout_midle2.add_widget(Label(text='con ' + str(a)+ ','+str(b)))
+        for a, b in list_connection_multi_line:
+            self.layout_midle2.add_widget(Label(text='m_con ' + str(a)+ ','+str(b)))
 
 
 if __name__ == '__main__':
