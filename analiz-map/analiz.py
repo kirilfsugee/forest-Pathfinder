@@ -6,15 +6,16 @@ from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Rectangle, Color, Line
 #from kivy.clock import Clock
-
 from kivy.config import Config
+import os
+if os.name == 'nt':
+    os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 
 # задаем размер окна приложения
-Config.set('graphics', 'width', '1590')
-Config.set('graphics', 'height', '1000')
+Config.set('graphics', 'width', '1366')
+Config.set('graphics', 'height', '768')
 Config.set('graphics', 'resizable', '0')
 # отключам мульт тач, чтоб работала правая кнопка мыши
-Config.set('input', 'mouse', 'mouse,disable_multitouch')
 Config.write()
 
 # списко точек
@@ -36,11 +37,7 @@ temp_i_20 = -1
 
 
 class MainApp(App):
-    img = Image(source='../map_forest.png',
-                # size_hint=(1, 1),
-                # pos_hint={'center_x': .5, 'center_y': .5},
-                # pos=(100, 110)
-                )
+    img = Image(source='../map_forest.png')
 
     def build(self):
 
@@ -56,7 +53,7 @@ class MainApp(App):
                                        rows=max_count_points,
                                        padding=3,
                                        size_hint=(None, None),
-                                       size=(190, 1000))
+                                       size=(190, 768))
         self.layout_main.add_widget(self.layout_midle)
 
         # создаем среднюю раскладку для отображения соединений
@@ -64,7 +61,7 @@ class MainApp(App):
                                         rows=max_count_points,
                                         padding=3,
                                         size_hint=(None, None),
-                                        size=(190, 1000))
+                                        size=(190, 768))
         self.layout_main.add_widget(self.layout_midle2)
         # отрисовываем всё
         self.update(self)
@@ -73,7 +70,7 @@ class MainApp(App):
         layout_right = BoxLayout(padding=3,
                                  orientation="vertical",
                                  size_hint=(None, None),
-                                 size=(150, 1000))
+                                 size=(150, 768))
         btn_add_point = Button(text="Add point",
                                size_hint=(1, 1),
                                size=(150, 50),
@@ -218,14 +215,20 @@ class MainApp(App):
         for a, b in list_connection:
             x1, y1 = list_point[a]
             x2, y2 = list_point[b]
-            with self.layout_left.canvas:
-                Color(0, 0, 1, 1)  # rgba
-                Line(points=[x_min + x1, y_max - y1, x_min + x2, y_max - y2], width=2)
+            if list_point[a] == list_point[b]:
+                pass
+            else:
+                with self.layout_left.canvas:
+                    Color(0, 0, 1, 1)  # rgba
+                    Line(points=[x_min + x1, y_max - y1, x_min + x2, y_max - y2], width=2)
 
         # отображаем список точек
         self.layout_midle.clear_widgets()
         for x, y in list_point:
             self.layout_midle.add_widget(Label(text='point ' + str(x)+','+str(y)))
+
+        if list_point[a] == list_point[b]:
+            list_connection.remove((a,b))
 
         self.layout_midle2.clear_widgets()
         for a, b in list_connection:
