@@ -152,6 +152,10 @@ class MainApp(App):
     # обработчик нажатия кнопки мыши
     def on_touch_up(self, touch, p):
         global mouse_rejim, temp_i_20, list_point, temp_multi_line
+
+        def check_line(x,y,x1,y1,x2,y2):
+            return abs((x - x1) / (x2 - x1+0.00001) - (y - y1) / (y2 - y1+0.00001))<0.46
+
         dopusk = 5
         x, y = p.pos
         x = int(x) - x_min
@@ -210,12 +214,35 @@ class MainApp(App):
                 for i,(a, b) in enumerate(list_connection):
                     x1, y1 = list_point[a]
                     x2, y2 = list_point[b]
-#                    print (x, ' ', y,' ', x1,' ',x2,' ',y1,' ',y2)
-#                    print(abs((x - x1) * (y2 - y1) - (x2 - x1) * (y - y1)))
-                    #print("abs ", abs((x - x1) / (x2 - x1 + 0.00000000000001) - (y - y1) / (y2 - y1 + 0.000000000000001)))
-                    if abs((x - x1) / (x2 - x1+0.00001) - (y - y1) / (y2 - y1+0.00001))<0.46:
+
+                    if check_line(x,y,x1,y1,x2,y2): # if abs((x - x1) / (x2 - x1+0.00001) - (y - y1) / (y2 - y1+0.00001))<0.46:
                         list_connection.pop(i)
                         self.update(self)
+                # ищем мульти линию
+                logik = False
+                for point, multi in list(zip(list_connection_multi_line, list_multi_line)):
+                    # получаем начальную и последнюю точку
+                    a, b = point
+                    xs, ys = list_point[a]
+                    xe, ye = list_point[b]
+                    l = list(multi)
+                    xp, yp = l.pop(0)
+                    # проверяем первую линию
+                    logik = check_line(x, y, xs, ys, xp, yp)
+                    while l:
+                        x2, y2 = l.pop(0)
+                        logik = logik or check_line(x,y,xp,yp,x2,y2)
+                        xp, yp = x2, y2
+                    # проверяем последнюю
+                    logik = logik or check_line(x, y, xp, yp, xe, ye)
+                    if logik:
+                        ii = list_connection_multi_line.index(point)
+                        list_connection_multi_line.pop(ii)
+                        list_multi_line.pop(ii)
+                        self.update(self)
+                        break
+
+
                 mouse_rejim = 0
             elif mouse_rejim == 40:  # добавить мульт лаин    ожидаем первую точку
                 if debug:
@@ -280,7 +307,6 @@ class MainApp(App):
 
         # отображаем временную мультилиний соединения из списка
         x1,y1 = list_point[temp_i_20]
-        print(temp_multi_line)
         for x,y in temp_multi_line:
             with self.layout_left.canvas:
                 Color(0, 0, 1, 1)  # rgba
@@ -288,9 +314,6 @@ class MainApp(App):
                 x1,y1 =x,y
 
         # отображаем мультилиний соединения из списка
-
-#        print(list_connection_multi_line)
-#        print(list_multi_line)
         for point, multi in list(zip(list_connection_multi_line,list_multi_line)):
             # получаем начальную и последнюю точку
             a,b = point
@@ -312,7 +335,6 @@ class MainApp(App):
             with self.layout_left.canvas:
                 Color(0, 0, 1, 1)  # rgba
                 Line(points=[x_min + xp, y_max - yp, x_min + xe, y_max - ye], width=2)
-
 
         # отображаем список точек
         self.layout_midle.clear_widgets()
