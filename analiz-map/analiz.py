@@ -1,6 +1,6 @@
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.label import Label
+from kivy.uix.label import Label, CoreLabel
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
@@ -20,10 +20,10 @@ Config.set('graphics', 'resizable', '0')
 Config.write()
 
 # списко точек
-list_point = [(362, 192), (409, 237)]
+list_point = [(362, 192), (409, 237),(326,269),(457,233),(467,333)]
 list_connection = []
-list_connection_multi_line = []
-list_multi_line = []
+list_connection_multi_line = [(2, 1), (1, 0), (2, 0), (1, 3), (3, 4)]
+list_multi_line = [(), (), (), (), ()]
 
 # максимальное количество перекрестков
 max_count_points = 60
@@ -312,6 +312,8 @@ class MainApp(App):
                         temp_multi_line = []
                         # добавляем в список соединений мульти линии
                         list_connection_multi_line.append((temp_i_20, i))
+                        print(list_connection_multi_line)
+                        print(list_multi_line)
                         mouse_rejim = 0
                         if debug:
                             print('добавлено мульти соединение между ' + str(temp_i_20) + ' и ' + str(i))
@@ -321,6 +323,7 @@ class MainApp(App):
                         # добавляем очередную точку
                         temp_multi_line.append((x, y))
                         self.update(self)
+                    print(list_connection_multi_line)
 
             elif mouse_rejim == 50:  # движение робота ловим точку старта
                 # 1 определяем принадлежит ли начальная точка карте
@@ -346,6 +349,14 @@ class MainApp(App):
         if mouse_rejim == 55:
             # 3 расчет карты
 
+            # количество вершин в графе
+            N = len(list_connection_multi_line)
+            # строим матрицу смежности
+            D = [[-1]*N for _ in range(N)]
+
+            for i in range(N):
+                D[i][i]=0
+            print(D)
 
             # 4 отображение маршрута
 
@@ -359,22 +370,26 @@ class MainApp(App):
         self.layout_left.add_widget(self.img)
 
         # отображаем точки из списка
-        for x, y in list_point:
+        for i, (x, y) in enumerate(list_point):
             with self.layout_left.canvas:
                 Color(1, 0, 1, 1)
                 self.rect = Rectangle(pos=(x_min + x - 5, y_max - y - 5),
                                       size=(10, 10))
+                # отображение номера
+                label = CoreLabel(text=str(i), font_size=16)
+                label.refresh()
+                self.rect2 = Rectangle(size=label.texture.size, pos=(x_min + x - 5, y_max - y + 5), texture=label.texture)
 
-        # отображаем линий соединения из списка
-        for a, b in list_connection:
-            x1, y1 = list_point[a]
-            x2, y2 = list_point[b]
-            if list_point[a] == list_point[b]:
-                pass
-            else:
-                with self.layout_left.canvas:
-                    Color(0, 0, 1, 1)  # rgba
-                    Line(points=[x_min + x1, y_max - y1, x_min + x2, y_max - y2], width=2)
+        # # отображаем линий соединения из списка
+        # for a, b in list_connection:
+        #     x1, y1 = list_point[a]
+        #     x2, y2 = list_point[b]
+        #     if list_point[a] == list_point[b]:
+        #         pass
+        #     else:
+        #         with self.layout_left.canvas:
+        #             Color(0, 0, 1, 1)  # rgba
+        #             Line(points=[x_min + x1, y_max - y1, x_min + x2, y_max - y2], width=2)
 
         # отображаем временную мультилиний соединения из списка
         x1, y1 = list_point[temp_i_20]
