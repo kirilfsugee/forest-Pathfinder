@@ -41,6 +41,12 @@ temp_i_20 = -1
 # временная мультлиния
 temp_multi_line = []
 
+# переменные для движения робота
+robot_start_x = 0
+robot_start_y = 0
+robot_end_x = 0
+robot_end_y = 0
+
 
 class MainApp(App):
     img = Image(source='../map_forest.png')
@@ -105,6 +111,13 @@ class MainApp(App):
         btn_delete.bind(on_press=self.delete)
         layout_right.add_widget(btn_delete)
 
+        btn_robot_move = Button(text="Robot move",
+                                size_hint=(1, 1),
+                                size=(150, 50),
+                                background_color=[0, 1, 0, 1])
+        btn_robot_move.bind(on_press=self.robot_move)
+        layout_right.add_widget(btn_robot_move)
+
         btn_export = Button(text="Export",
                             size_hint=(1, None),
                             size=(150, 50),
@@ -152,12 +165,54 @@ class MainApp(App):
         if mouse_rejim == 0:
             mouse_rejim = 30
 
+    def robot_move(self, _):
+        global mouse_rejim
+        # функция движения робота
+        if mouse_rejim == 0:
+            mouse_rejim = 50
+
+
     # обработчик нажатия кнопки мыши
     def on_touch_up(self, _, p):
-        global mouse_rejim, temp_i_20, list_point, temp_multi_line
+        global mouse_rejim, temp_i_20, list_point, temp_multi_line, robot_start_x, robot_start_y, \
+            robot_end_x, robot_end_y
 
         def check_line(ix, iy, ix1, iy1, ix2, iy2):
             return abs((ix - ix1) / (ix2 - ix1 + 0.00001) - (iy - iy1) / (iy2 - iy1 + 0.00001)) < 0.46
+
+        def check_in_point():
+            out = -1
+            for i, (lx, ly) in enumerate(list_point):
+                if lx - dopusk < x < lx + dopusk and ly - dopusk < y < ly + dopusk:
+                    out = i
+                    break
+            return out
+
+        def check_in_multi_line():
+            out = -1
+            for point, multi in list(zip(list_connection_multi_line, list_multi_line)):
+                # получаем начальную и последнюю точку
+                a, b = point
+                xs, ys = list_point[a]
+                xe, ye = list_point[b]
+                l_multi = list(multi)
+                # если мультилиния не пуста
+                if l_multi:
+                    xp, yp = l_multi.pop(0)
+                    # проверяем первую линию
+                    logik = check_line(x, y, xs, ys, xp, yp)
+                    while l_multi:
+                        x2, y2 = l_multi.pop(0)
+                        logik = logik or check_line(x, y, xp, yp, x2, y2)
+                        xp, yp = x2, y2
+                    # проверяем последнюю
+                    logik = logik or check_line(x, y, xp, yp, xe, ye)
+                else:
+                    logik = check_line(x, y, xs, ys, xe, ye)
+                # усли нашли то отправляем номер
+                if logik:
+                    out = list_connection_multi_line.index(point)
+            return out
 
         dopusk = 5
         x, y = p.pos
@@ -202,52 +257,32 @@ class MainApp(App):
                 # ищем есть ли рядом точка c x,y
                 if debug:
                     print('30 точка in x ' + str(x) + ' y ' + str(y))
-                for i, (lx, ly) in enumerate(list_point):
-                    if lx - dopusk < x < lx + dopusk and ly - dopusk < y < ly + dopusk:
-                        # провеяоем нет ли её в соединениях
-                        netu = True
-                        for a, b in list_connection:
-                            if a == i or b == i:
-                                netu = False
-                                break
-                        if netu:
-                            list_point.pop(i)
-                            self.update(self)
-                # ищем на линии
-                for i, (a, b) in enumerate(list_connection):
-                    x1, y1 = list_point[a]
-                    x2, y2 = list_point[b]
+                check_point = check_in_point()
+                if check_point != -1:
+                    # провеяоем нет ли её в соединениях
+                    netu = True
+                    for a, b in list_connection:
+                        if a == check_point or b == check_point:
+                            netu = False
+                    if netu:
+                        list_point.pop(check_point)
+                        self.update(self)
 
-                    if check_line(x, y, x1, y1, x2, y2):
-                        list_connection.pop(i)
-                        self.update(self)
+                # # ищем на линии
+                # for i, (a, b) in enumerate(list_connection):
+                #     x1, y1 = list_point[a]
+                #     x2, y2 = list_point[b]
+                #
+                #     if check_line(x, y, x1, y1, x2, y2):
+                #         list_connection.pop(i)
+                #         self.update(self)
+
                 # ищем мульти линию
-                for point, multi in list(zip(list_connection_multi_line, list_multi_line)):
-                    # получаем начальную и последнюю точку
-                    a, b = point
-                    xs, ys = list_point[a]
-                    xe, ye = list_point[b]
-                    l_multi = list(multi)
-                    # если мультилиния не пуста
-                    if l_multi:
-                        xp, yp = l_multi.pop(0)
-                        # проверяем первую линию
-                        logik = check_line(x, y, xs, ys, xp, yp)
-                        while l_multi:
-                            x2, y2 = l_multi.pop(0)
-                            logik = logik or check_line(x, y, xp, yp, x2, y2)
-                            xp, yp = x2, y2
-                        # проверяем последнюю
-                        logik = logik or check_line(x, y, xp, yp, xe, ye)
-                    else:
-                        logik = check_line(x, y, xs, ys, xe, ye)
-                    # усли нашли то удаляем точку
-                    if logik:
-                        ii = list_connection_multi_line.index(point)
-                        list_connection_multi_line.pop(ii)
-                        list_multi_line.pop(ii)
-                        self.update(self)
-                        break
+                check_multi_line = check_in_multi_line()
+                if check_multi_line != -1:
+                    list_connection_multi_line.pop(check_multi_line)
+                    list_multi_line.pop(check_multi_line)
+                    self.update(self)
                 mouse_rejim = 0
 
             elif mouse_rejim == 40:  # добавить мульт лаин    ожидаем первую точку
@@ -286,6 +321,35 @@ class MainApp(App):
                         # добавляем очередную точку
                         temp_multi_line.append((x, y))
                         self.update(self)
+
+            elif mouse_rejim == 50:  # движение робота ловим точку старта
+                # 1 определяем принадлежит ли начальная точка карте
+                if check_in_multi_line() != -1 or check_in_point() != -1:
+                    robot_start_x = x
+                    robot_start_y = y
+                    with self.layout_left.canvas:
+                        Color(1, 0, 0, 1)
+                        self.rect = Rectangle(pos=(x_min + robot_start_x - 7, y_max - robot_start_y - 7),
+                                              size=(14, 14))
+                    mouse_rejim = 52
+
+            elif mouse_rejim == 52:  # движение робота ловим точку завершения
+                # 2 определяем принадлежит ли конечная точка карте
+                if check_in_multi_line() != -1 or check_in_point() != -1:
+                    robot_end_x = x
+                    robot_end_y = y
+                    with self.layout_left.canvas:
+                        Color(0, 0.5, 0.5, 1)
+                        self.rect = Rectangle(pos=(x_min + robot_end_x - 7, y_max - robot_end_y - 7),
+                                              size=(14, 14))
+                    mouse_rejim = 55
+        if mouse_rejim == 55:
+            # 3 расчет карты
+
+
+            # 4 отображение маршрута
+
+            mouse_rejim = 0
 
     def update(self, _):
         # очищаем экран, перерисовываем карту
