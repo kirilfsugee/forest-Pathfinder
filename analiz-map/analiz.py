@@ -8,6 +8,7 @@ from kivy.graphics import Rectangle, Color, Line
 # from kivy.clock import Clock
 from kivy.config import Config
 import os
+import math
 
 if os.name == 'nt':
     os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
@@ -352,11 +353,60 @@ class MainApp(App):
             # количество вершин в графе
             N = len(list_connection_multi_line)
             # строим матрицу смежности
-            D = [[-1]*N for _ in range(N)]
+            D = [[math.inf]*N for _ in range(N)]
 
             for i in range(N):
-                D[i][i]=0
+                D[i][i] = 0
+            print('список соединений')
+            print(list_connection_multi_line)
+            for a, b in list_connection_multi_line:
+                len_line = 0
+                x1, y1 = list_point[a]
+                x2, y2 = list_point[b]
+                len_line = int(math.sqrt(math.pow(x2-x1,2) + math.pow(y2-y1,2)))
+                D[a][b] = len_line
+                D[b][a] = len_line
+
+            def arg_min(T, S):
+                amin = -1
+                m = math.inf  # максимальное значение
+                for i, t in enumerate(T):
+                    if t < m and i not in S:
+                        m = t
+                        amin = i
+                return amin
+
+            print('список смежностей')
             print(D)
+            T = [math.inf] * N  # последняя строка таблицы
+            v = 4  # стартовая вершина (нумерация с нуля)
+            S = {v}  # просмотренные вершины
+            T[v] = 0  # нулевой вес для стартовой вершины
+            M = [0] * N  # оптимальные связи между вершинами
+
+            while v != -1:  # цикл, пока не просмотрим все вершины
+                for j, dw in enumerate(D[v]):  # перебираем все связанные вершины с вершиной v
+                    if j not in S:  # если вершина еще не просмотрена
+                        w = T[v] + dw
+                        if w < T[j]:
+                            T[j] = w
+                            M[j] = v  # связываем вершину j с вершиной v
+
+                v = arg_min(T, S)  # выбираем следующий узел с наименьшим весом
+                if v >= 0:  # выбрана очередная вершина
+                    S.add(v)  # добавляем новую вершину в рассмотрение
+            print('нулевой вес ', 'оптимальные связи')
+            print(T, M, sep="\n")
+            # формирование оптимального маршрута:
+            start = 4
+            end = 2
+            P = [end]
+            while end != start:
+                end = M[P[-1]]
+                P.append(end)
+            print('оптимальный маршрут')
+            print(P)
+
 
             # 4 отображение маршрута
 
