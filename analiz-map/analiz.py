@@ -350,6 +350,8 @@ class MainApp(App):
         if mouse_rejim == 55:
             # 3 расчет карты
 
+
+
             # количество вершин в графе
             N = len(list_connection_multi_line)
             # строим матрицу смежности
@@ -359,13 +361,38 @@ class MainApp(App):
                 D[i][i] = 0
             print('список соединений')
             print(list_connection_multi_line)
-            for a, b in list_connection_multi_line:
-                len_line = 0
+
+            # удаляем линии на которых
+
+            for point, multi in list(zip(list_connection_multi_line, list_multi_line)):
+                #len_line = 0
+                # получаем начальную и последнюю точку
+                a, b = point
                 x1, y1 = list_point[a]
                 x2, y2 = list_point[b]
-                len_line = int(math.sqrt(math.pow(x2-x1,2) + math.pow(y2-y1,2)))
+                l_multi = list(multi)
+                # если мультилиния не пуста
+                if l_multi:
+                    xp, yp = l_multi.pop(0)
+                    # проверяем первую линию
+                    len_line = int(math.sqrt(math.pow(xp - x1, 2) + math.pow(yp - y1, 2)))
+                    while l_multi:
+                        xv, yv = l_multi.pop(0)
+                        len_line += int(math.sqrt(math.pow(xp - xv, 2) + math.pow(yp - yv, 2)))
+                        xp, yp = xv, yv
+                    # проверяем последнюю
+                    len_line += int(math.sqrt(math.pow(xp - x2, 2) + math.pow(yp - y2, 2)))
+                else:
+                    len_line = int(math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2)))
+
                 D[a][b] = len_line
                 D[b][a] = len_line
+
+
+
+
+
+
 
             def arg_min(T, S):
                 amin = -1
