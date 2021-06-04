@@ -5,9 +5,10 @@ from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Rectangle, Color, Line
-#from kivy.clock import Clock
+# from kivy.clock import Clock
 from kivy.config import Config
 import os
+
 if os.name == 'nt':
     os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 
@@ -24,7 +25,6 @@ list_connection = []
 list_connection_multi_line = []
 list_multi_line = []
 
-
 # максимальное количество перекрестков
 max_count_points = 60
 # статус режима вывода отладочной информации
@@ -39,7 +39,8 @@ mouse_rejim = 0  # 0 ничего,  10 режим добавляения точ�
 # запомненная точка в 20 режиме
 temp_i_20 = -1
 # временная мультлиния
-temp_multi_line =[]
+temp_multi_line = []
+
 
 class MainApp(App):
     img = Image(source='../map_forest.png')
@@ -91,12 +92,11 @@ class MainApp(App):
         # layout_right.add_widget(btn_add_connection)
 
         btn_add_connection_multi_line = Button(text="Add multi con",
-                                    size_hint=(1, 1),
-                                    size=(150, 50),
-                                    background_color=[0, 1, 0, 1])
+                                               size_hint=(1, 1),
+                                               size=(150, 50),
+                                               background_color=[0, 1, 0, 1])
         btn_add_connection_multi_line.bind(on_press=self.add_connection_maulti_line)
         layout_right.add_widget(btn_add_connection_multi_line)
-
 
         btn_delete = Button(text="Delete",
                             size_hint=(1, 1),
@@ -117,12 +117,14 @@ class MainApp(App):
 
     def export_file(self, instance):
         # функция экспорта кортежей
-        if debug: print('Вы нажали на кнопку export')
+        if debug:
+            print('Вы нажали на кнопку export')
 
     def add_point(self, instance):
         global mouse_rejim
         # функция добавить точку
-        if debug: print('Вы нажали на кнопку add_point')
+        if debug:
+            print('Вы нажали на кнопку add_point')
         if mouse_rejim == 0:
             mouse_rejim = 10
 
@@ -145,16 +147,17 @@ class MainApp(App):
     def delete(self, instance):
         global mouse_rejim
         # функция экспорта кортежей
-        if debug: print('Вы нажали на кнопку delete')
+        if debug:
+            print('Вы нажали на кнопку delete')
         if mouse_rejim == 0:
             mouse_rejim = 30
 
     # обработчик нажатия кнопки мыши
-    def on_touch_up(self, touch, p):
+    def on_touch_up(self, _, p):
         global mouse_rejim, temp_i_20, list_point, temp_multi_line
 
-        def check_line(x,y,x1,y1,x2,y2):
-            return abs((x - x1) / (x2 - x1+0.00001) - (y - y1) / (y2 - y1+0.00001))<0.46
+        def check_line(ix, iy, ix1, iy1, ix2, iy2):
+            return abs((ix - ix1) / (ix2 - ix1 + 0.00001) - (iy - iy1) / (iy2 - iy1 + 0.00001)) < 0.46
 
         dopusk = 5
         x, y = p.pos
@@ -186,8 +189,8 @@ class MainApp(App):
                 if debug:
                     print('25 точка in ' + str(x) + ' y ' + str(y))
                 for i, (lx, ly) in enumerate(list_point):
-                    #if debug:
-                        #print('точка check ' + str(lx) + ' y ' + str(ly))
+                    # if debug:
+                    #     print('точка check ' + str(lx) + ' y ' + str(ly))
                     if lx - dopusk < x < lx + dopusk and ly - dopusk < y < ly + dopusk:
                         list_connection.append((temp_i_20, i))
                         mouse_rejim = 0
@@ -204,36 +207,35 @@ class MainApp(App):
                         # провеяоем нет ли её в соединениях
                         netu = True
                         for a, b in list_connection:
-                            if a==i or b==i:
+                            if a == i or b == i:
                                 netu = False
                                 break
                         if netu:
                             list_point.pop(i)
                             self.update(self)
                 # ищем на линии
-                for i,(a, b) in enumerate(list_connection):
+                for i, (a, b) in enumerate(list_connection):
                     x1, y1 = list_point[a]
                     x2, y2 = list_point[b]
 
-                    if check_line(x,y,x1,y1,x2,y2): # if abs((x - x1) / (x2 - x1+0.00001) - (y - y1) / (y2 - y1+0.00001))<0.46:
+                    if check_line(x, y, x1, y1, x2, y2):
                         list_connection.pop(i)
                         self.update(self)
                 # ищем мульти линию
-                logik = False
                 for point, multi in list(zip(list_connection_multi_line, list_multi_line)):
                     # получаем начальную и последнюю точку
                     a, b = point
                     xs, ys = list_point[a]
                     xe, ye = list_point[b]
-                    l = list(multi)
+                    l_multi = list(multi)
                     # если мультилиния не пуста
-                    if l:
-                        xp, yp = l.pop(0)
+                    if l_multi:
+                        xp, yp = l_multi.pop(0)
                         # проверяем первую линию
                         logik = check_line(x, y, xs, ys, xp, yp)
-                        while l:
-                            x2, y2 = l.pop(0)
-                            logik = logik or check_line(x,y,xp,yp,x2,y2)
+                        while l_multi:
+                            x2, y2 = l_multi.pop(0)
+                            logik = logik or check_line(x, y, xp, yp, x2, y2)
                             xp, yp = x2, y2
                         # проверяем последнюю
                         logik = logik or check_line(x, y, xp, yp, xe, ye)
@@ -266,8 +268,8 @@ class MainApp(App):
                     print('45 точка in ' + str(x) + ' y ' + str(y))
 
                 for i, (lx, ly) in enumerate(list_point):  # если попали в точку конец мультлинии
-                    #if debug:
-                        #print('точка check ' + str(lx) + ' y ' + str(ly))
+                    # if debug:
+                    #     print('точка check ' + str(lx) + ' y ' + str(ly))
                     if lx - dopusk < x < lx + dopusk and ly - dopusk < y < ly + dopusk:
                         # добавляем наш список точек в лист
                         list_multi_line.append(tuple(temp_multi_line))
@@ -282,10 +284,10 @@ class MainApp(App):
                         break
                     else:
                         # добавляем очередную точку
-                        temp_multi_line.append((x,y))
+                        temp_multi_line.append((x, y))
                         self.update(self)
 
-    def update(self, p):
+    def update(self, _):
         # очищаем экран, перерисовываем карту
         self.layout_left.canvas.clear()
         self.layout_left.remove_widget(self.img)
@@ -311,59 +313,58 @@ class MainApp(App):
                     Line(points=[x_min + x1, y_max - y1, x_min + x2, y_max - y2], width=2)
 
         # отображаем временную мультилиний соединения из списка
-        x1,y1 = list_point[temp_i_20]
-        for x,y in temp_multi_line:
+        x1, y1 = list_point[temp_i_20]
+        for x, y in temp_multi_line:
             with self.layout_left.canvas:
                 Color(0, 0, 1, 1)  # rgba
                 Line(points=[x_min + x1, y_max - y1, x_min + x, y_max - y], width=2)
-                x1,y1 =x,y
+                x1, y1 = x, y
 
         # отображаем мультилиний соединения из списка
-        for point, multi in list(zip(list_connection_multi_line,list_multi_line)):
+        for point, multi in list(zip(list_connection_multi_line, list_multi_line)):
             # получаем начальную и последнюю точку a b
-            a,b = point
+            a, b = point
             xs, ys = list_point[a]
             xe, ye = list_point[b]
             # получаем список точек мультилинии в список
-            l =list(multi)
+            l_multi = list(multi)
             # мульти линия то отрисовываем промежутки
-            if l:
-                xp, yp = l.pop(0)
+            if l_multi:
+                xp, yp = l_multi.pop(0)
                 # отрисовываем первую линию
                 with self.layout_left.canvas:
                     Color(0, 0, 1, 1)  # rgba
                     Line(points=[x_min + xs, y_max - ys, x_min + xp, y_max - yp], width=2)
-                while l:
-                    x2, y2 = l.pop(0)
+                while l_multi:
+                    x2, y2 = l_multi.pop(0)
                     with self.layout_left.canvas:
                         Color(0, 0, 1, 1)  # rgba
                         Line(points=[x_min + xp, y_max - yp, x_min + x2, y_max - y2], width=2)
-                    xp, yp =x2, y2
+                    xp, yp = x2, y2
                 # отрисовываем последнюю
                 with self.layout_left.canvas:
                     Color(0, 0, 1, 1)  # rgba
                     Line(points=[x_min + xp, y_max - yp, x_min + xe, y_max - ye], width=2)
-            else: # значит нет мультилинии
+            else:  # значит нет мультилинии
                 with self.layout_left.canvas:
                     Color(0, 0, 1, 1)  # rgba
                     Line(points=[x_min + xs, y_max - ys, x_min + xe, y_max - ye], width=2)
 
-
         # отображаем список точек
         self.layout_midle.clear_widgets()
         for x, y in list_point:
-            self.layout_midle.add_widget(Label(text='point ' + str(x)+','+str(y)))
+            self.layout_midle.add_widget(Label(text='point ' + str(x) + ',' + str(y)))
 
         # уже не понял зачем
-        #if list_point[a] == list_point[b]:
+        # if list_point[a] == list_point[b]:
         #    list_connection.remove((a,b))
 
         # выводим список соединений и мультилиний
         self.layout_midle2.clear_widgets()
         for a, b in list_connection:
-            self.layout_midle2.add_widget(Label(text='con ' + str(a)+ ','+str(b)))
+            self.layout_midle2.add_widget(Label(text='con ' + str(a) + ',' + str(b)))
         for a, b in list_connection_multi_line:
-            self.layout_midle2.add_widget(Label(text='m_con ' + str(a)+ ','+str(b)))
+            self.layout_midle2.add_widget(Label(text='m_con ' + str(a) + ',' + str(b)))
 
 
 if __name__ == '__main__':
